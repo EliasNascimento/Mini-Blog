@@ -2,8 +2,8 @@ import styles from "./EditPost.module.css";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuthValue } from "../../context/AuthContext";
-import { useInsertDocument } from "../../hooks/useInsertDocument";
 import { useFetchDocument } from "../../hooks/useFetchDocument";
+import { useUpdateDocument } from "../../hooks/useUpdateDocument";
 
 const EditPost = () => {
   const { id } = useParams();
@@ -21,9 +21,7 @@ const EditPost = () => {
       setBody(post.body);
       setImage(post.image);
 
-      const textTags = post.tagsArray.map((tag) => {
-        return " #" + tag;
-      });
+      const textTags = post.tagsArray.join(",");
 
       setTags(textTags);
     }
@@ -31,7 +29,7 @@ const EditPost = () => {
 
   const { user } = useAuthValue();
 
-  const { insertDocument, response } = useInsertDocument("posts");
+  const { updateDocument, response } = useUpdateDocument("posts");
 
   const navigate = useNavigate();
 
@@ -46,8 +44,10 @@ const EditPost = () => {
     } catch (error) {
       setFormError("A imagem precisa ser uma URL.");
     }
+
     //create tags array
-    const tagsArray = tags.split(",").map((tag) => tag.trim().toLowerCase());
+    const tagsArray = tags.split(",");
+    // .map((tag) => tag.trim().toLowerCase());
 
     //check all values
     if (!title || !image || !tags || !body) {
@@ -58,17 +58,19 @@ const EditPost = () => {
       return;
     }
 
-    insertDocument({
+    const data = {
       title,
       image,
       body,
       tagsArray,
       uid: user.uid,
       createdBy: user.displayName,
-    });
+    };
 
-    //redirect to home page
-    navigate("/");
+    updateDocument(id, data);
+
+    //redirect to dashboard
+    navigate("/dashboard");
   };
 
   return (
